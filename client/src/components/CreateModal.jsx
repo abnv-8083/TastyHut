@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { X, Save, Plus } from 'lucide-react';
+import { X, Save, Plus, Edit } from 'lucide-react';
 
-const CreateModal = ({ type, onSubmit, onClose }) => {
+const CreateModal = ({ type, onSubmit, onClose, initialData }) => {
     const [formData, setFormData] = useState(
-        type === 'item'
-            ? { name: '', code: '', price: '', category: '' }
-            : { number: '' }
+        initialData || (
+            type === 'item'
+                ? { name: '', code: '', price: '', category: '' }
+                : { number: '' }
+        )
     );
 
     const handleChange = (e) => {
@@ -22,6 +23,8 @@ const CreateModal = ({ type, onSubmit, onClose }) => {
         }
     };
 
+    const isEdit = !!initialData;
+
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
@@ -29,8 +32,8 @@ const CreateModal = ({ type, onSubmit, onClose }) => {
             <div className="relative w-full max-w-md glass bg-gray-900 rounded-3xl p-6 shadow-2xl animate-slide-up border border-blue-500/20">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold flex items-center gap-2">
-                        <Plus className="w-6 h-6 text-blue-500" />
-                        Add New {type === 'item' ? 'Item' : 'Table'}
+                        {isEdit ? <Edit className="w-6 h-6 text-blue-400" /> : <Plus className="w-6 h-6 text-blue-500" />}
+                        {isEdit ? 'Edit' : 'Add New'} {type === 'item' ? 'Item' : 'Table'}
                     </h2>
                     <button onClick={onClose} className="p-2 bg-gray-800 rounded-full text-gray-400 hover:text-white transition-colors">
                         <X className="w-5 h-5" />
@@ -66,7 +69,7 @@ const CreateModal = ({ type, onSubmit, onClose }) => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 ml-1">Price ($)</label>
+                                    <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 ml-1">Price (₹)</label>
                                     <input
                                         required
                                         name="price"

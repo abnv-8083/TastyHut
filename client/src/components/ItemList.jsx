@@ -1,6 +1,6 @@
-import { Search, Copy, Plus } from 'lucide-react';
+import { Search, Copy, Plus, Edit, Trash2 } from 'lucide-react';
 
-const ItemList = ({ items, searchQuery, onSearchChange, onCopy, onAdd }) => {
+const ItemList = ({ items, searchQuery, onSearchChange, onCopy, onAdd, onEdit, onDelete }) => {
     const query = searchQuery.toLowerCase();
     const filteredItems = items.filter(i =>
         i.name.toLowerCase().includes(query) ||
@@ -41,7 +41,7 @@ const ItemList = ({ items, searchQuery, onSearchChange, onCopy, onAdd }) => {
                             <th className="px-4 py-4 font-semibold">Item</th>
                             <th className="px-4 py-4 font-semibold">Code</th>
                             <th className="px-4 py-4 font-semibold text-right">Price</th>
-                            <th className="w-16"></th>
+                            <th className="px-4 py-4 font-semibold text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800/50">
@@ -52,14 +52,31 @@ const ItemList = ({ items, searchQuery, onSearchChange, onCopy, onAdd }) => {
                                     <div className="text-[10px] text-gray-500 uppercase">{item.category}</div>
                                 </td>
                                 <td className="px-4 py-5 font-mono text-xs text-blue-400">{item.code}</td>
-                                <td className="px-4 py-5 text-right font-semibold text-sm">${item.price.toFixed(2)}</td>
+                                <td className="px-4 py-5 text-right font-semibold text-sm">₹{item.price.toFixed(2)}</td>
                                 <td className="px-4 py-5">
-                                    <button
-                                        onClick={() => handleCopy(item.code)}
-                                        className="p-2 bg-gray-800 rounded-xl hover:bg-gray-700 text-gray-400 hover:text-white transition-all active:scale-90"
-                                    >
-                                        <Copy className="w-4 h-4" />
-                                    </button>
+                                    <div className="flex items-center justify-center gap-2">
+                                        <button
+                                            onClick={() => onEdit(item)}
+                                            className="p-2 bg-blue-500/10 text-blue-400 rounded-xl hover:bg-blue-500 hover:text-white transition-all active:scale-90"
+                                            title="Edit Item"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => onDelete(item.id)}
+                                            className="p-2 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all active:scale-90"
+                                            title="Delete Item"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleCopy(item.code)}
+                                            className="p-2 bg-gray-800 rounded-xl hover:bg-gray-700 text-gray-400 hover:text-white transition-all active:scale-90"
+                                            title="Copy Code"
+                                        >
+                                            <Copy className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

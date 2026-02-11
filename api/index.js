@@ -121,7 +121,42 @@ app.post('/api/items', async (req, res) => {
     }
 });
 
-// 6. Add a new table
+// 6. Update an item
+app.put('/api/items/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, code, price, category } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('items')
+            .update({ name, code, price, category })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 7. Delete an item
+app.delete('/api/items/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { error } = await supabase
+            .from('items')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ message: 'Item deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 8. Add a new table
 app.post('/api/tables', async (req, res) => {
     const { number } = req.body;
     try {
@@ -133,6 +168,22 @@ app.post('/api/tables', async (req, res) => {
 
         if (error) throw error;
         res.status(201).json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 9. Delete a table
+app.delete('/api/tables/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { error } = await supabase
+            .from('tables')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ message: 'Table deleted' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

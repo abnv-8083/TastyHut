@@ -23,6 +23,7 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createType, setCreateType] = useState('item'); // 'item' or 'table'
+  const [selectedEditItem, setSelectedEditItem] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '' });
 
   // Fetch initial data
@@ -67,22 +68,52 @@ function App() {
     setIsModalOpen(true);
   };
 
-  const handleOpenCreateModal = (type) => {
+  const handleOpenCreateModal = (type, editingItem = null) => {
     setCreateType(type);
+    setSelectedEditItem(editingItem);
     setIsCreateModalOpen(true);
   };
 
   const handleCreateRequest = async (data) => {
     try {
       const endpoint = createType === 'item' ? 'items' : 'tables';
-      await axios.post(`${API_BASE_URL}/${endpoint}`, data);
-      showToast(`${createType.charAt(0).toUpperCase() + createType.slice(1)} added successfully!`);
+      if (selectedEditItem) {
+        await axios.put(`${API_BASE_URL}/items/${selectedEditItem.id}`, data);
+        showToast('Item updated successfully!');
+      } else {
+        await axios.post(`${API_BASE_URL}/${endpoint}`, data);
+        showToast(`${createType.charAt(0).toUpperCase() + createType.slice(1)} added successfully!`);
+      }
       setIsCreateModalOpen(false);
+      setSelectedEditItem(null);
       fetchData(); // Refresh list
     } catch (err) {
-      console.error('Error creating:', err);
-      const errorMsg = err.response?.data?.error;
-      showToast(typeof errorMsg === 'string' ? errorMsg : 'Error saving data');
+      console.error('Error saving:', err);
+      showToast(err);
+    }
+  };
+
+  const handleDeleteItem = async (id) => {
+    if (window.confirm('Are you sure you want to delete this item?')) {
+      try {
+        await axios.delete(`${API_BASE_URL}/items/${id}`);
+        showToast('Item deleted successfully');
+        fetchData();
+      } catch (err) {
+        showToast(err);
+      }
+    }
+  };
+
+  const handleDeleteTable = async (id) => {
+    if (window.confirm('Delete this table? This cannot be undone.')) {
+      try {
+        await axios.delete(`${API_BASE_URL}/tables/${id}`);
+        showToast('Table deleted');
+        fetchData();
+      } catch (err) {
+        showToast(err);
+      }
     }
   };
 
@@ -144,6 +175,7 @@ function App() {
             onTableClick={handleOpenModal}
             activeOrders={activeOrders}
             onAdd={() => handleOpenCreateModal('table')}
+            onDelete={handleDeleteTable}
           />
         ) : (
           <ItemList
@@ -152,6 +184,8 @@ function App() {
             onSearchChange={(val) => setSearchQueries(prev => ({ ...prev, items: val }))}
             onCopy={showToast}
             onAdd={() => handleOpenCreateModal('item')}
+            onEdit={(item) => handleOpenCreateModal('item', item)}
+            onDelete={handleDeleteItem}
           />
         )}
       </main>
@@ -174,8 +208,12 @@ function App() {
       {isCreateModalOpen && (
         <CreateModal
           type={createType}
+          initialData={selectedEditItem}
           onSubmit={handleCreateRequest}
-          onClose={() => setIsCreateModalOpen(false)}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setSelectedEditItem(null);
+          }}
         />
       )}
 

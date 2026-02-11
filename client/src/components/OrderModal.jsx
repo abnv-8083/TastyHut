@@ -46,7 +46,7 @@ const OrderModal = ({ table, items, order, searchQuery, onSearchChange, onUpdate
                                 <div key={item.id} className={`flex items-center justify-between p-3 bg-gray-800/20 rounded-2xl border transition-colors ${qty > 0 ? 'border-blue-500/30 bg-blue-500/5' : 'border-gray-800/50'}`}>
                                     <div className="flex-1">
                                         <div className="font-medium text-sm">{item.name}</div>
-                                        <div className="text-[10px] text-gray-500">${item.price.toFixed(2)} | {item.code}</div>
+                                        <div className="text-[10px] text-gray-500">₹{item.price.toFixed(2)} | {item.code}</div>
                                     </div>
                                     <div className="flex items-center gap-3 bg-gray-950/50 rounded-lg p-1 border border-gray-800">
                                         <button
@@ -72,7 +72,7 @@ const OrderModal = ({ table, items, order, searchQuery, onSearchChange, onUpdate
                 <div className="pt-6 border-t border-gray-800 flex justify-between items-center">
                     <div>
                         <div className="text-[10px] text-gray-500 uppercase tracking-widest">Bill Total</div>
-                        <div className="text-2xl font-bold text-blue-500">${order.total.toFixed(2)}</div>
+                        <div className="text-2xl font-bold text-blue-500">₹{order.total.toFixed(2)}</div>
                     </div>
                     <div className="flex gap-2">
                         <button
