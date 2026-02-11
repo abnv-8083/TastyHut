@@ -6,6 +6,8 @@ import TableGrid from './components/TableGrid';
 import ItemList from './components/ItemList';
 import OrderModal from './components/OrderModal';
 import CreateModal from './components/CreateModal';
+import Notification from './components/Notification';
+import ConfirmDialog from './components/ConfirmDialog';
 
 const API_BASE_URL = '/api';
 
@@ -24,7 +26,8 @@ function App() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createType, setCreateType] = useState('item'); // 'item' or 'table'
   const [selectedEditItem, setSelectedEditItem] = useState(null);
-  const [toast, setToast] = useState({ show: false, message: '' });
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
+  const [confirm, setConfirm] = useState({ show: false, title: '', message: '', onConfirm: () => { } });
 
   // Fetch initial data
   const fetchData = async () => {
@@ -37,7 +40,7 @@ function App() {
       setItems(Array.isArray(itemsRes.data) ? itemsRes.data : []);
     } catch (err) {
       console.error('Error fetching data:', err);
-      showToast('Connection error: Could not fetch data from server.');
+      showNotification('Connection error: Could not fetch data from server.', 'error');
     }
   };
 
@@ -45,7 +48,7 @@ function App() {
     fetchData();
   }, []);
 
-  const showToast = (msg) => {
+  const showNotification = (msg, type = 'info') => {
     let safeMessage = 'An unexpected error occurred';
 
     if (typeof msg === 'string') {
@@ -58,8 +61,7 @@ function App() {
       safeMessage = JSON.stringify(msg);
     }
 
-    setToast({ show: true, message: String(safeMessage) });
-    setTimeout(() => setToast({ show: false, message: '' }), 2500);
+    setNotification({ show: true, message: String(safeMessage), type });
   };
 
   const handleOpenModal = (tableId) => {
@@ -79,42 +81,56 @@ function App() {
       const endpoint = createType === 'item' ? 'items' : 'tables';
       if (selectedEditItem) {
         await axios.put(`${API_BASE_URL}/items/${selectedEditItem.id}`, data);
-        showToast('Item updated successfully!');
+        showNotification('Item updated successfully!', 'success');
       } else {
         await axios.post(`${API_BASE_URL}/${endpoint}`, data);
-        showToast(`${createType.charAt(0).toUpperCase() + createType.slice(1)} added successfully!`);
+        showNotification(`${createType.charAt(0).toUpperCase() + createType.slice(1)} added successfully!`, 'success');
       }
       setIsCreateModalOpen(false);
       setSelectedEditItem(null);
       fetchData(); // Refresh list
     } catch (err) {
       console.error('Error saving:', err);
-      showToast(err);
+      showNotification(err, 'error');
     }
   };
 
-  const handleDeleteItem = async (id) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      try {
-        await axios.delete(`${API_BASE_URL}/items/${id}`);
-        showToast('Item deleted successfully');
-        fetchData();
-      } catch (err) {
-        showToast(err);
+  const handleDeleteItem = (id) => {
+    const item = items.find(i => i.id === id);
+    setConfirm({
+      show: true,
+      title: 'Delete Item?',
+      message: `Are you sure you want to delete "${item?.name}"? This will remove it from the menu forever.`,
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_BASE_URL}/items/${id}`);
+          showNotification('Item deleted successfully', 'success');
+          fetchData();
+        } catch (err) {
+          showNotification(err, 'error');
+        }
+        setConfirm(prev => ({ ...prev, show: false }));
       }
-    }
+    });
   };
 
-  const handleDeleteTable = async (id) => {
-    if (window.confirm('Delete this table? This cannot be undone.')) {
-      try {
-        await axios.delete(`${API_BASE_URL}/tables/${id}`);
-        showToast('Table deleted');
-        fetchData();
-      } catch (err) {
-        showToast(err);
+  const handleDeleteTable = (id) => {
+    const table = tables.find(t => t.id === id);
+    setConfirm({
+      show: true,
+      title: 'Remove Table?',
+      message: `Are you sure you want to remove Table ${table?.number}? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_BASE_URL}/tables/${id}`);
+          showNotification('Table removed successfully', 'success');
+          fetchData();
+        } catch (err) {
+          showNotification(err, 'error');
+        }
+        setConfirm(prev => ({ ...prev, show: false }));
       }
-    }
+    });
   };
 
   const handleUpdateQty = (itemId, delta) => {
@@ -147,19 +163,26 @@ function App() {
   };
 
   const handleClearOrder = async (tableId) => {
-    if (window.confirm('Are you sure you want to clear this table?')) {
-      try {
-        await axios.delete(`${API_BASE_URL}/orders/${tableId}`);
-        setActiveOrders(prev => {
-          const newOrders = { ...prev };
-          delete newOrders[tableId];
-          return newOrders;
-        });
-        setIsModalOpen(false);
-      } catch (err) {
-        console.error('Error clearing order:', err);
+    setConfirm({
+      show: true,
+      title: 'Complete Order?',
+      message: 'This will clear the table status and archive the current order.',
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_BASE_URL}/orders/${tableId}`);
+          setActiveOrders(prev => {
+            const newOrders = { ...prev };
+            delete newOrders[tableId];
+            return newOrders;
+          });
+          setIsModalOpen(false);
+          showNotification('Order completed and table cleared', 'success');
+        } catch (err) {
+          showNotification(err, 'error');
+        }
+        setConfirm(prev => ({ ...prev, show: false }));
       }
-    }
+    });
   };
 
   return (
@@ -182,7 +205,7 @@ function App() {
             items={items}
             searchQuery={searchQueries.items}
             onSearchChange={(val) => setSearchQueries(prev => ({ ...prev, items: val }))}
-            onCopy={showToast}
+            onCopy={(msg) => showNotification(msg, 'success')}
             onAdd={() => handleOpenCreateModal('item')}
             onEdit={(item) => handleOpenCreateModal('item', item)}
             onDelete={handleDeleteItem}
@@ -217,10 +240,16 @@ function App() {
         />
       )}
 
-      {/* Toast */}
-      <div className={`fixed top-20 left-1/2 -translate-x-1/2 glass px-4 py-2 rounded-full text-sm font-medium z-[100] transition-opacity duration-300 pointer-events-none ${toast.show ? 'opacity-100' : 'opacity-0'}`}>
-        {toast.message}
-      </div>
+      {/* Notifications & Dialogs */}
+      <Notification
+        {...notification}
+        onClose={() => setNotification(prev => ({ ...prev, show: false }))}
+      />
+
+      <ConfirmDialog
+        {...confirm}
+        onCancel={() => setConfirm(prev => ({ ...prev, show: false }))}
+      />
     </div>
   );
 }
