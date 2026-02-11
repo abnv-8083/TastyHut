@@ -64,6 +64,7 @@ DROP POLICY IF EXISTS "Allow public insert" ON items;
 DROP POLICY IF EXISTS "Allow public insert" ON tables;
 DROP POLICY IF EXISTS "Allow public insert" ON orders;
 DROP POLICY IF EXISTS "Allow public insert" ON order_items;
+DROP POLICY IF EXISTS "Allow public update" ON items;
 DROP POLICY IF EXISTS "Allow public update" ON tables;
 DROP POLICY IF EXISTS "Allow public update" ON orders;
 DROP POLICY IF EXISTS "Allow public delete" ON items;
@@ -81,6 +82,7 @@ CREATE POLICY "Allow public insert" ON tables FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public insert" ON orders FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public insert" ON order_items FOR INSERT WITH CHECK (true);
 
+CREATE POLICY "Allow public update" ON items FOR UPDATE USING (true);
 CREATE POLICY "Allow public update" ON tables FOR UPDATE USING (true);
 CREATE POLICY "Allow public update" ON orders FOR UPDATE USING (true);
 
