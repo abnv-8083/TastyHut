@@ -108,16 +108,20 @@ app.delete('/api/orders/:tableId', async (req, res) => {
 app.post('/api/items', async (req, res) => {
     const { name, code, price, category } = req.body;
     try {
+        if (!name || !code || price === undefined || !category) {
+            return res.status(400).json({ error: 'Missing required fields.' });
+        }
+
         const { data, error } = await supabase
             .from('items')
             .insert([{ name, code, price, category }])
-            .select()
-            .single();
+            .select();
 
         if (error) throw error;
-        res.status(201).json(data);
+        res.status(201).json(data[0]);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Create Item Error:', err);
+        res.status(500).json({ error: err.message || 'Failed to create item.' });
     }
 });
 
@@ -126,17 +130,24 @@ app.put('/api/items/:id', async (req, res) => {
     const { id } = req.params;
     const { name, code, price, category } = req.body;
     try {
+        if (!name || !code || price === undefined || !category) {
+            return res.status(400).json({ error: 'Missing required fields: name, code, price, and category are all required.' });
+        }
+
         const { data, error } = await supabase
             .from('items')
             .update({ name, code, price, category })
             .eq('id', id)
-            .select()
-            .single();
+            .select();
 
         if (error) throw error;
-        res.json(data);
+        if (!data || data.length === 0) {
+            return res.status(404).json({ error: 'Item not found in database.' });
+        }
+        res.json(data[0]);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Update Item Error:', err);
+        res.status(500).json({ error: err.message || 'Failed to update item.' });
     }
 });
 

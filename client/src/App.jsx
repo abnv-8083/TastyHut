@@ -54,11 +54,14 @@ function App() {
     if (typeof msg === 'string') {
       safeMessage = msg;
     } else if (msg?.response?.data?.error) {
-      safeMessage = msg.response.data.error;
+      const errData = msg.response.data.error;
+      safeMessage = typeof errData === 'string' ? errData : (errData.message || JSON.stringify(errData));
+    } else if (msg?.response?.data?.message) {
+      safeMessage = msg.response.data.message;
     } else if (msg?.message) {
       safeMessage = msg.message;
     } else if (msg) {
-      safeMessage = JSON.stringify(msg);
+      safeMessage = typeof msg === 'string' ? msg : JSON.stringify(msg);
     }
 
     setNotification({ show: true, message: String(safeMessage), type });
@@ -79,11 +82,18 @@ function App() {
   const handleCreateRequest = async (data) => {
     try {
       const endpoint = createType === 'item' ? 'items' : 'tables';
+
+      // Sanitize payload: strip metadata and format numbers
+      const payload = { ...data };
+      delete payload.id;
+      delete payload.created_at;
+      if (payload.price) payload.price = parseFloat(payload.price);
+
       if (selectedEditItem) {
-        await axios.put(`${API_BASE_URL}/items/${selectedEditItem.id}`, data);
+        await axios.put(`${API_BASE_URL}/items/${selectedEditItem.id}`, payload);
         showNotification('Item updated successfully!', 'success');
       } else {
-        await axios.post(`${API_BASE_URL}/${endpoint}`, data);
+        await axios.post(`${API_BASE_URL}/${endpoint}`, payload);
         showNotification(`${createType.charAt(0).toUpperCase() + createType.slice(1)} added successfully!`, 'success');
       }
       setIsCreateModalOpen(false);
