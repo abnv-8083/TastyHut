@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS tables (
 -- 3. Orders Table
 CREATE TABLE IF NOT EXISTS orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    table_id UUID REFERENCES tables(id),
+    table_id UUID REFERENCES tables(id) ON DELETE CASCADE,
     total_amount DECIMAL(10, 2) DEFAULT 0,
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'served', 'paid')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS order_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
-    item_id UUID REFERENCES items(id),
+    item_id UUID REFERENCES items(id) ON DELETE CASCADE,
     quantity INTEGER DEFAULT 1,
     price_at_time DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -66,6 +66,8 @@ DROP POLICY IF EXISTS "Allow public insert" ON orders;
 DROP POLICY IF EXISTS "Allow public insert" ON order_items;
 DROP POLICY IF EXISTS "Allow public update" ON tables;
 DROP POLICY IF EXISTS "Allow public update" ON orders;
+DROP POLICY IF EXISTS "Allow public delete" ON items;
+DROP POLICY IF EXISTS "Allow public delete" ON tables;
 DROP POLICY IF EXISTS "Allow public delete" ON orders;
 DROP POLICY IF EXISTS "Allow public delete" ON order_items;
 
@@ -82,5 +84,7 @@ CREATE POLICY "Allow public insert" ON order_items FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update" ON tables FOR UPDATE USING (true);
 CREATE POLICY "Allow public update" ON orders FOR UPDATE USING (true);
 
+CREATE POLICY "Allow public delete" ON items FOR DELETE USING (true);
+CREATE POLICY "Allow public delete" ON tables FOR DELETE USING (true);
 CREATE POLICY "Allow public delete" ON orders FOR DELETE USING (true);
 CREATE POLICY "Allow public delete" ON order_items FOR DELETE USING (true);
