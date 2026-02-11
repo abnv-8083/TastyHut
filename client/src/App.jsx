@@ -7,9 +7,7 @@ import ItemList from './components/ItemList';
 import OrderModal from './components/OrderModal';
 import CreateModal from './components/CreateModal';
 
-const API_BASE_URL = window.location.origin === 'http://localhost:5173'
-  ? 'http://localhost:5000/api'
-  : '/api';
+const API_BASE_URL = '/api';
 
 function App() {
   const [activeTab, setActiveTab] = useState('tables'); // 'tables' or 'items'
@@ -46,7 +44,8 @@ function App() {
   }, []);
 
   const showToast = (message) => {
-    setToast({ show: true, message });
+    const safeMessage = typeof message === 'string' ? message : 'An error occurred';
+    setToast({ show: true, message: safeMessage });
     setTimeout(() => setToast({ show: false, message: '' }), 2000);
   };
 
@@ -70,8 +69,8 @@ function App() {
       fetchData(); // Refresh list
     } catch (err) {
       console.error('Error creating:', err);
-      const msg = err.response?.data?.error || 'Error saving data';
-      showToast(msg);
+      const errorMsg = err.response?.data?.error;
+      showToast(typeof errorMsg === 'string' ? errorMsg : 'Error saving data');
     }
   };
 
