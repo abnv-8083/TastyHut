@@ -32,10 +32,11 @@ function App() {
         axios.get(`${API_BASE_URL}/tables`),
         axios.get(`${API_BASE_URL}/items`)
       ]);
-      setTables(tablesRes.data);
-      setItems(itemsRes.data);
+      setTables(Array.isArray(tablesRes.data) ? tablesRes.data : []);
+      setItems(Array.isArray(itemsRes.data) ? itemsRes.data : []);
     } catch (err) {
       console.error('Error fetching data:', err);
+      showToast('Connection error: Could not fetch data from server.');
     }
   };
 
@@ -43,14 +44,21 @@ function App() {
     fetchData();
   }, []);
 
-  const showToast = (message) => {
-    // If message is an object (common with Axios/Supabase errors), extract the message string
-    const safeMessage = typeof message === 'string'
-      ? message
-      : (message?.message || message?.error || 'An error occurred');
+  const showToast = (msg) => {
+    let safeMessage = 'An unexpected error occurred';
+
+    if (typeof msg === 'string') {
+      safeMessage = msg;
+    } else if (msg?.response?.data?.error) {
+      safeMessage = msg.response.data.error;
+    } else if (msg?.message) {
+      safeMessage = msg.message;
+    } else if (msg) {
+      safeMessage = JSON.stringify(msg);
+    }
 
     setToast({ show: true, message: String(safeMessage) });
-    setTimeout(() => setToast({ show: false, message: '' }), 2000);
+    setTimeout(() => setToast({ show: false, message: '' }), 2500);
   };
 
   const handleOpenModal = (tableId) => {
