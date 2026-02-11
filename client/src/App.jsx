@@ -44,8 +44,12 @@ function App() {
   }, []);
 
   const showToast = (message) => {
-    const safeMessage = typeof message === 'string' ? message : 'An error occurred';
-    setToast({ show: true, message: safeMessage });
+    // If message is an object (common with Axios/Supabase errors), extract the message string
+    const safeMessage = typeof message === 'string'
+      ? message
+      : (message?.message || message?.error || 'An error occurred');
+
+    setToast({ show: true, message: String(safeMessage) });
     setTimeout(() => setToast({ show: false, message: '' }), 2000);
   };
 
