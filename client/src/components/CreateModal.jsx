@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { X, Save, Plus, Edit } from 'lucide-react';
 
 const CreateModal = ({ type, onSubmit, onClose, initialData }) => {
